@@ -1,10 +1,9 @@
 require('dotenv').config();
-
-
 const mongoose = require('mongoose')
 const express = require('express')
-
+const userModel = require('./src/models/userModel.js');
 const app = express();
+app.use(express.json());
 
 // (ayns() => {
 //    try {
@@ -17,28 +16,60 @@ const app = express();
 
 
 const connect = async() => {
-    try {
-        mongoose.connect("mongodb://localhost:27017/test").then(() => console.log('connected'));
-    } catch (error) {
-        console.log(error);
-    }
+     try{
+         await mongoose.connect("mongodb://127.0.0.1:27017/test")
+         .then(() =>console.log('db connected'));
+
+     }catch(err){
+        console.log(err)
+     }
 }
 
-
-app.use('/' , (req ,res) => {
-    res.write("<h1>Hello with mongodb</h1>");
-    res.write("<p>lorem ipusm doller is working now</p>");
-    res.write("<h1>Hello with mongodb</h1>");
-    res.end();
-})
-
-
-
-
 connect();
-app.listen(process.env.PORT , () => {
-    console.log(`server is running at ${process.env.PORT}`)
+
+
+app.post('/users' , async(req , res) => {
+    const {name , userName , password} = req.body;
+    const newUser = new userModel({name , userName , password});
+
+    try{
+        const saveUser = await newUser.save();
+        res.json(saveUser);
+
+    }catch(err){
+        res.status(500).json({error : err.message})
+    }
 })
+
+
+app.get('/users' , async(req, res) => {
+      try{
+        const users = await userModel.find({});
+        // res.write(`${users.map(user => "<p>"{user.lengt + 1}{user}</p>)}`);
+        res.writeHead("application/content"-"text/json");
+        res.write(users.map(user => `<h1>${user.name} (${user.userName}) ${user.password}</h1>`).join(''));
+        res.end();  
+        res.status(200).json({data : users})
+      }catch(err){
+        console.log(err);
+      }
+})
+
+
+
+app.listen(process.env.PORT , () => {
+    console.log(`server is running at ${process.env.PORT}`);
+})
+
+// app.use('/' , (req ,res) => {
+//     res.write("<h1>Hello with mongodb</h1>");
+//     res.write("<p>lorem ipusm doller is working now</p>");
+//     res.write("<h1>Hello with mongodb</h1>");
+//     res.end();
+// })
+
+
+
 // const express = require('express');
 // const app = express();
 // const fs = require('fs');
